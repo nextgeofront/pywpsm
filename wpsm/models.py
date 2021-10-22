@@ -11,8 +11,8 @@ class FP(models.Model):
     user_lat = models.FloatField('user latitude', null=True)
     user_lng = models.FloatField('user longitude', null=True)
 
-    app_name = models.CharField('app name that is gathering', max_length=50)
-    position = models.CharField(max_length=30,null=True)
+    package_name = models.CharField('package name that is gathering', max_length=50, null=True)
+    position = models.CharField(max_length=30, null=True)
     reg_date = models.DateField('date published', default=datetime.today)
 
 
