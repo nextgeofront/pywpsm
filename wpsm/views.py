@@ -3,6 +3,7 @@ from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import FP, ScanMac
+import pandas as pd
 
 # Create your views here.
 @csrf_exempt
@@ -36,12 +37,13 @@ def insert_fp(request):
 def wps(request):
     data = json.loads(request.body)
     try:
-        wifi_towers = data['wifi_towers']
-        macs = [w['mac_address'].upper() for w in wifi_towers if w['signal_strength'] >= -85]
-        print(len(macs), macs)
-        filtered = ScanMac.objects.filter(mac__in=macs)
-
-        print([f.fp_id for f in filtered])
+        macs = [w['mac_address'].upper() for w in data['wifi_towers'] if w['signal_strength'] >= -85]
+        len_macs = len(macs)
+        filtered = ScanMac.objects.filter(mac__in=macs).values()
+        df = pd.DataFrame(filtered)
+        print(df)
+        df_grp = df.groupby('fp_id').size().reset_index(name='counts')
+        print(df_grp)
 
     except Exception as ex:
         print(ex)
