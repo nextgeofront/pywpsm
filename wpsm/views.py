@@ -43,7 +43,10 @@ def wps(request):
         df = pd.DataFrame(filtered)
         print(df)
         df_grp = df.groupby('fp_id').size().reset_index(name='counts')
-        print(df_grp)
+        df_grp['percentage'] = df_grp['counts']/len_macs
+        b = df_grp.loc[df_grp['percentage'] > 0.65]
+        c = FP.objects.filter(id__in=list(b['fp_id'])).values()
+
 
     except Exception as ex:
         print(ex)

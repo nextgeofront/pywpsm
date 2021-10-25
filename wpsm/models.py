@@ -17,7 +17,7 @@ class FP(models.Model):
 
 
 class ScanMac(models.Model):
-    fp = models.ForeignKey(FP, on_delete=models.CASCADE)
+    fp = models.ForeignKey(FP, related_name="scanmac_fp", on_delete=models.CASCADE)
     ssid = models.CharField('ssid', max_length=32)
     mac = models.CharField('mac_address', max_length=17)
     rssi = models.SmallIntegerField('signal strength')
