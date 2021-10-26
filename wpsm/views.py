@@ -4,6 +4,10 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import FP, ScanMac
 import pandas as pd
+import numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import preprocessing
+from sklearn.preprocessing import OneHotEncoder
 
 # Create your views here.
 @csrf_exempt
@@ -41,11 +45,18 @@ def wps(request):
         len_macs = len(macs)
         filtered = ScanMac.objects.filter(mac__in=macs).values()
         df = pd.DataFrame(filtered)
-        print(df)
-        df_grp = df.groupby('fp_id').size().reset_index(name='counts')
-        df_grp['percentage'] = df_grp['counts']/len_macs
-        b = df_grp.loc[df_grp['percentage'] > 0.65]
-        c = FP.objects.filter(id__in=list(b['fp_id'])).values()
+        le = preprocessing.LabelEncoder()
+        df['mac_le'] = le.fit_transform(df['mac'])
+        # df = df.set_index(['mac_le', 'rssi']).reset_index()
+        df_grp = df.groupby(['mac_le'])
+        for g in df_grp.groups:
+            print(df.loc[df['mac_le'] == g])
+
+        # df_grp['percentage'] = df_grp['counts']/len_macs
+        # b = df_grp.loc[df_grp['percentage']]
+        # print(b)
+        # c = FP.objects.filter(id__in=list(b['fp_id']))
+        # print(c)
 
 
     except Exception as ex:
