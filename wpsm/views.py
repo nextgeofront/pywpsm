@@ -44,22 +44,34 @@ def wps(request):
         macs = [w['mac_address'].upper() for w in data['wifi_towers'] if w['signal_strength'] >= -85]
         len_macs = len(macs)
         filtered = ScanMac.objects.filter(mac__in=macs).values()
+        print(filtered)
         df = pd.DataFrame(filtered)
-        le = preprocessing.LabelEncoder()
-        df['mac_le'] = le.fit_transform(df['mac'])
-        # df = df.set_index(['mac_le', 'rssi']).reset_index()
-        df_grp = df.groupby(['mac_le'])
+        if df.empty:
+            return JsonResponse({'fingerprint':-1, 'scan': macs, 'location': data['locations']})
+
+        df_grp = df.groupby(['fp_id'])
+        # print(df_grp.groups)
+        sums = []
+        wifi_towers = data['wifi_towers']
         for g in df_grp.groups:
-            print(df.loc[df['mac_le'] == g])
-
-        # df_grp['percentage'] = df_grp['counts']/len_macs
-        # b = df_grp.loc[df_grp['percentage']]
-        # print(b)
-        # c = FP.objects.filter(id__in=list(b['fp_id']))
-        # print(c)
-
-
+            temp = df.loc[df['fp_id'] == g]
+            sum = 0
+            for w in wifi_towers:
+                m = temp.loc[temp['mac'] == w['mac_address'].upper()]
+                if not m.empty:
+                    m_rssi = m['rssi'].values[0]
+                    sum += abs(m_rssi - w['signal_strength'])
+                else:
+                    sum += abs(w['signal_strength'])
+            sums.append([g, sum])
+        df_min = pd.DataFrame(sums, columns=['fp_id', 'min'])
+        print(df_min.to_dict('records'))
+        fp = FP.objects.filter(id=df_min.loc[ df_min['min'] == df_min['min'].min()]['fp_id'].values[0])[0].__dict__
+        print(fp)
     except Exception as ex:
         print(ex)
-    return JsonResponse({'result':0})
+    return JsonResponse({'fingerprint':fp['id'],
+                         'match': len_macs,
+                         'location':[fp['user_lat'], fp['user_lng']],
+                         'score': df_min.to_dict('records') })
 
