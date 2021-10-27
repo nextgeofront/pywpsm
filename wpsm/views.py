@@ -71,7 +71,7 @@ def wps(request):
     except Exception as ex:
         print(ex)
     return JsonResponse({'fingerprint':fp['id'],
-                         'match': len_macs,
                          'location':[fp['user_lat'], fp['user_lng']],
-                         'score': df_min.to_dict('records') })
+                         'score': df_min.to_dict('records'),
+                         'scan': macs,})
 
